@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stashd</title>
+  <meta name="description" content="Personal security story archive with Discord integration." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="container">
+
+  <!-- ─── Header ──────────────────────────────────────────────────────── -->
+  <header class="site-header">
+    <div class="logo">
+      Stashd
+    </div>
+
+    <div class="header-stats">
+      <span class="stat-chip" title="Total stories archived">
+        <span id="stat-stories">0</span> stories
+      </span>
+      <span class="stat-chip" title="Unique tags in use">
+        <span id="stat-tags">0</span> tags
+      </span>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-ghost" data-action="show-settings">settings</button>
+      <button class="btn btn-primary" data-action="toggle-form">+ add story</button>
+    </div>
+  </header>
+
+  <!-- ─── Main view ───────────────────────────────────────────────────── -->
+  <div id="main-view">
+
+    <!-- Add / Edit form -->
+    <section
+      id="story-form"
+      class="story-form"
+      style="display: none;"
+      aria-label="Add or edit a story"
+    >
+      <p class="form-heading" id="form-heading">// new entry</p>
+
+      <div class="field">
+        <label for="f-title">title <span style="color:var(--danger)">*</span></label>
+        <input
+          id="f-title"
+          type="text"
+          placeholder="What did you read / watch / build?"
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="field">
+        <label for="f-url">url</label>
+        <input
+          id="f-url"
+          type="url"
+          placeholder="https://..."
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="field">
+        <label for="f-summary">summary / notes</label>
+        <textarea
+          id="f-summary"
+          placeholder="Key takeaway, context, what you learned, what to come back to..."
+        ></textarea>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="f-tags">tags</label>
+          <input
+            id="f-tags"
+            type="text"
+            placeholder="ctf, web, oscp, blue-team, rev..."
+            autocomplete="off"
+          />
+        </div>
+        <div class="field">
+          <label for="f-source">source</label>
+          <input
+            id="f-source"
+            type="text"
+            placeholder="HackTheBox, Medium, YouTube..."
+            autocomplete="off"
+          />
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn btn-primary" data-action="save-story">save to archive</button>
+        <button class="btn btn-ghost"   data-action="cancel-form">cancel</button>
+      </div>
+    </section>
+
+    <!-- Toolbar: search + Discord actions -->
+    <div class="toolbar">
+      <div class="search-wrap">
+        <input
+          id="search"
+          type="search"
+          placeholder="Search titles, URLs, summaries, tags..."
+          autocomplete="off"
+        />
+      </div>
+      <button class="btn btn-ghost" data-action="copy-discord" title="Copy current view as Discord-formatted text">
+        copy for discord
+      </button>
+    </div>
+
+    <!-- Discord quick-actions row (only visible when webhook is set) -->
+    <div class="discord-row" id="discord-row" style="display:none">
+      <span class="discord-row-label">discord →</span>
+      <button class="btn btn-ghost" data-action="post-digest" title="Post current view as rich embeds">post digest (embeds)</button>
+      <button class="btn btn-ghost" data-action="post-text"   title="Post current view as plain text">post digest (text)</button>
+    </div>
+
+    <!-- Tag filter chips -->
+    <div class="tag-filter" id="tag-filter" role="group" aria-label="Filter by tag"></div>
+
+    <!-- Story cards -->
+    <main id="story-list" role="list" aria-label="Archived stories"></main>
+
+  </div><!-- /#main-view -->
+
+  <!-- ─── Settings panel ──────────────────────────────────────────────── -->
+  <section
+    id="settings-panel"
+    class="settings-panel"
+    style="display: none;"
+    aria-label="App settings"
+  >
+    <p class="settings-heading">// settings</p>
+
+    <!-- Discord section -->
+    <div class="settings-section">
+      <h2 class="settings-section-title">Discord integration</h2>
+
+      <div class="field">
+        <label for="s-webhook">webhook URL</label>
+        <input
+          id="s-webhook"
+          type="url"
+          placeholder="https://discord.com/api/webhooks/..."
+          autocomplete="off"
+        />
+        <p class="settings-hint">
+          Server settings → Integrations → Webhooks → New Webhook → Copy URL.
+          See <a href="docs/discord-setup.md" target="_blank" style="color:var(--accent)">docs/discord-setup.md</a> for a full walkthrough.
+        </p>
+      </div>
+
+      <div class="field">
+        <label for="s-username">bot display name</label>
+        <input
+          id="s-username"
+          type="text"
+          placeholder="Stashd"
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="field">
+        <label for="s-avatar">bot avatar URL <span style="color:var(--text-3)">(optional)</span></label>
+        <input
+          id="s-avatar"
+          type="url"
+          placeholder="https://..."
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="checkbox-row">
+        <input id="s-autopost" type="checkbox" />
+        <label for="s-autopost">auto-post new stories to Discord on save</label>
+      </div>
+
+      <div style="margin-top: 12px;">
+        <button class="btn btn-ghost" data-action="test-webhook">send test message</button>
+      </div>
+    </div>
+
+    <!-- Data section -->
+    <div class="settings-section">
+      <h2 class="settings-section-title">Data</h2>
+      <p class="settings-hint" style="margin-bottom: 12px;">
+        Export a full JSON backup of all stories, or import a previous backup (merges by ID, no duplicates).
+      </p>
+      <div style="display:flex; gap:8px;">
+        <button class="btn btn-ghost" data-action="export-json">export JSON backup</button>
+        <label class="import-label">
+          import JSON backup
+          <input id="import-file" type="file" accept=".json" />
+        </label>
+      </div>
+    </div>
+
+    <div class="settings-actions">
+      <button class="btn btn-primary" data-action="save-settings">save settings</button>
+      <button class="btn btn-ghost"   data-action="hide-settings">← back</button>
+    </div>
+  </section>
+
+</div><!-- /.container -->
+
+<!-- Toast notification -->
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script type="module" src="js/app.js"></script>
+
+</body>
+</html>
